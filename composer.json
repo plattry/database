@@ -1,0 +1,30 @@
+{
+    "name": "plattry/database",
+    "description": "The plattry database manager package",
+    "keywords": [
+        "plattry",
+        "database",
+        "pdo"
+    ],
+    "type": "library",
+    "license": "GPL-3.0",
+    "autoload": {
+        "psr-4": {
+            "Plattry\\Database\\": "src/"
+        },
+        "exclude-from-classmap": [
+          "/test/"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Andrew Lee",
+            "email": "sixser@foxmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": "^8.0",
+        "ext-pdo": "*"
+    }
+}
