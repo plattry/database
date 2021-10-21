@@ -77,9 +77,11 @@ class Collector implements Countable, IteratorAggregate
      */
     public function fetchOne(): bool|object
     {
-        $record = next($this->records);
+        $record = current($this->records);
         if ($record === false)
             return false;
+
+        next($this->records);
 
         return $this->makeModel($record);
     }
