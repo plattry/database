@@ -21,21 +21,67 @@ class Collector implements Countable, IteratorAggregate
     protected array $records;
 
     /**
+     * Data model
+     * @var string
+     */
+    protected string $model;
+
+    /**
      * Collector constructor.
      * @param array $records
+     * @param string $model
      */
-    public function __construct(array $records)
+    public function __construct(array $records, string $model = Record::class)
     {
-        $this->records = array_map(fn($record) => new Record($record), $records);
+        $this->records = $records;
+        reset($this->records);
+
+        $this->setModel($model);
+    }
+
+    /**
+     * Get current data model.
+     * @return string
+     */
+    public function getModel(): string
+    {
+        return $this->model;
+    }
+
+    /**
+     * Set current data model.
+     * @param string $model
+     * @return void
+     */
+    public function setModel(string $model): void
+    {
+        !class_exists($model) &&
+        throw new \InvalidArgumentException("Not found data model $model");
+
+        $this->model = $model;
+    }
+
+    /**
+     * Make a data model instance.
+     * @param array $record
+     * @return object
+     */
+    protected function makeModel(array $record): object
+    {
+        return new $this->model($record);
     }
 
     /**
      * Fetch one record.
-     * @return false|Record
+     * @return bool|object
      */
-    public function fetchOne(): false|Record
+    public function fetchOne(): bool|object
     {
-        return next($this->records);
+        $record = next($this->records);
+        if ($record === false)
+            return false;
+
+        return $this->makeModel($record);
     }
 
     /**
@@ -44,7 +90,7 @@ class Collector implements Countable, IteratorAggregate
      */
     public function fetchAll(): array
     {
-        return $this->records;
+        return array_map(fn($record) => $this->makeModel($record), $this->records);
     }
 
     /**
@@ -62,7 +108,7 @@ class Collector implements Countable, IteratorAggregate
      */
     public function toArray(): array
     {
-        return array_map(fn($record) => $record->toArray(), $this->records);
+        return $this->records;
     }
 
     /**
@@ -79,6 +125,6 @@ class Collector implements Countable, IteratorAggregate
      */
     public function getIterator(): ArrayIterator
     {
-        return new ArrayIterator($this->records);
+        return new ArrayIterator($this->fetchAll());
     }
 }
