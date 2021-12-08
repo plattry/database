@@ -5,12 +5,14 @@ declare(strict_types = 1);
 namespace Plattry\Database\Collection;
 
 use ArrayAccess;
+use ArrayIterator;
+use IteratorAggregate;
 
 /**
  * Class Record
  * @package Plattry\Database\Collection
  */
-class Record implements ArrayAccess
+class Record implements ArrayAccess, IteratorAggregate
 {
     /**
      * Record constructor.
@@ -103,5 +105,13 @@ class Record implements ArrayAccess
     public function offsetUnset($offset): void
     {
         $this->del($offset);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getIterator(): ArrayIterator
+    {
+        return new ArrayIterator($this->toArray());
     }
 }
