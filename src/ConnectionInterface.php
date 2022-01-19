@@ -4,30 +4,48 @@ declare(strict_types = 1);
 
 namespace Plattry\Database;
 
-use Plattry\Database\Collection\Collector;
-use Plattry\Database\Exception\RunStatementException;
-
 /**
- * Interface ConnectionAbstract
+ * Interface ConnectionInterface
  * @package Plattry\Database
  */
 interface ConnectionInterface
 {
     /**
-     * Execute an SQL statement and return the number of affected rows.
+     * Executes an SQL statement and return a Result object.
      * @param string $sql SQL statement.
      * @param array $bindings Parameters.
-     * @return int
-     * @throws RunStatementException
+     * @return Result
+     * @throws \RuntimeException
      */
-    public function execute(string $sql, array $bindings = []): int;
+    public function execute(string $sql, array $bindings = []): Result;
 
     /**
-     * Executes an SQL statement and return a result set as a Collector object.
-     * @param string $sql SQL statement.
-     * @param array $bindings Parameters.
-     * @return Collector
-     * @throws RunStatementException
+     * Get transaction status, true if is in a transaction, or false.
+     * @return bool
      */
-    public function query(string $sql, array $bindings = []): Collector;
+    public function getTransactionStatus(): bool;
+
+    /**
+     * Start a transaction.
+     * @return bool
+     */
+    public function beginTransaction(): bool;
+
+    /**
+     * Rollback a transaction.
+     * @return bool
+     */
+    public function rollbackTransaction(): bool;
+
+    /**
+     * Commits a transaction.
+     * @return bool
+     */
+    public function commitTransaction(): bool;
+
+    /**
+     * Get Pdo instance.
+     * @return \PDO
+     */
+    public function getPdo(): \PDO;
 }

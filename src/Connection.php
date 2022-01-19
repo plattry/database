@@ -4,11 +4,6 @@ declare(strict_types = 1);
 
 namespace Plattry\Database;
 
-use PDO;
-use PDOStatement;
-use Plattry\Database\Collection\Collector;
-use Plattry\Database\Exception\RunStatementException;
-
 /**
  * Class Connection
  * @package Plattry\Database
@@ -17,181 +12,118 @@ class Connection implements ConnectionInterface
 {
     /**
      * Database dsn
-     * @var string
+     * @var string|null
      */
-    protected string $dsn = '';
+    protected string|null $dsn;
 
     /**
      * Database username
-     * @var string
+     * @var string|null
      */
-    protected string $username = '';
+    protected string|null $username;
 
     /**
      * Database password
-     * @var string
+     * @var string|null
      */
-    protected string $password = '';
+    protected string|null $password;
 
     /**
-     * Database attribute
-     * @var array
+     * Database options
+     * @var array|null
      */
-    protected array $option = [];
+    protected array|null $options;
 
     /**
      * Pdo instance
-     * @var PDO
+     * @var \PDO
      */
-    protected PDO $instance;
+    protected \PDO $pdo;
 
     /**
-     * Set pdo dsn.
-     * @param string $dsn Pdo dsn.
-     * @return void
+     * @param string $dsn
+     * @param string|null $username
+     * @param string|null $password
+     * @param array|null $options
      */
-    public function setDsn(string $dsn): void
-    {
+    public function __construct(
+        string $dsn,
+        string $username = null,
+        string $password = null,
+        array $options = null
+    ) {
         $this->dsn = $dsn;
-    }
-
-    /**
-     * Set mysql userinfo.
-     * @param string $username User name.
-     * @param string $password User password.
-     * @return void
-     */
-    public function setUser(string $username, string $password): void
-    {
         $this->username = $username;
         $this->password = $password;
+        $this->options = $options;
+        $this->pdo = new \PDO($dsn, $username, $password, $options);
     }
 
     /**
-     * Set pdo attribute.
-     * @param int $name Attribute name.
-     * @param string $value Attribute value.
-     * @return void
+     * @inheritDoc
      */
-    public function setOption(int $name, string $value): void
+    public function execute(string $sql, array $bindings = []): Result
     {
-        $this->option[$name] = $value;
-    }
+        $statement = $this->pdo->prepare($sql);
 
-    /**
-     * Connect Database.
-     * @return void
-     */
-    public function connect(): void
-    {
-        $this->instance = new PDO(
-            $this->dsn, $this->username, $this->password, $this->option
+        foreach ($bindings as $key => $val) {
+            $statement->bindValue(
+                is_numeric($key) ? $key + 1 : $key,
+                $val,
+                is_int($val) ? \PDO::PARAM_INT : \PDO::PARAM_STR
+            );
+        }
+
+        $ret = $statement->execute();
+        !$ret &&
+        throw new \RuntimeException("Fail to execute SQL statement");
+
+        '00000' !== $statement->errorCode() &&
+        throw new \RuntimeException("Fail to execute SQL statement, ". implode(' ', $statement->errorInfo()));
+
+        return new Result(
+            $statement->rowCount(),
+            $statement->fetchAll(\PDO::FETCH_ASSOC)
         );
     }
 
     /**
      * @inheritDoc
      */
-    public function execute(string $sql, array $bindings = []): int
+    public function getTransactionStatus(): bool
     {
-        $statement = $this->instance->prepare($sql);
-
-        $this->bindValues($statement, $bindings);
-
-        $this->runStatement($statement);
-
-        return $statement->rowCount();
+        return $this->pdo->inTransaction();
     }
 
     /**
      * @inheritDoc
      */
-    public function query(string $sql, array $bindings = []): Collector
+    public function beginTransaction(): bool
     {
-        $statement = $this->instance->prepare($sql);
-
-        $this->bindValues($statement, $bindings);
-
-        $statement->setFetchMode(PDO::FETCH_ASSOC);
-
-        $this->runStatement($statement);
-
-        return (new Collector($statement->fetchAll()));
+        return $this->pdo->beginTransaction();
     }
 
     /**
-     * Binds a value to a parameter.
-     * @param PDOStatement $statement Statement.
-     * @param array $bindings Parameters.
-     * @return void
+     * @inheritDoc
      */
-    protected function bindValues(PDOStatement $statement, array $bindings): void
+    public function rollbackTransaction(): bool
     {
-        foreach ($bindings as $key => $val) {
-            $statement->bindValue(
-                is_numeric($key) ? $key + 1 : $key,
-                $val,
-                is_int($val) ? PDO::PARAM_INT : PDO::PARAM_STR
-            );
-        }
+        return $this->pdo->rollBack();
     }
 
     /**
-     * Executes a prepared statement.
-     * @param PDOStatement $statement Statement.
-     * @return void
-     * @throws RunStatementException
+     * @inheritDoc
      */
-    protected function runStatement(PDOStatement $statement): void
+    public function commitTransaction(): bool
     {
-        $statement->execute();
-
-        '00000' !== $statement->errorCode() &&
-        throw new RunStatementException("Fail to execute SQL statement, ". implode(' ', $statement->errorInfo()));
+        return $this->pdo->commit();
     }
 
     /**
-     * Checks if inside a transaction.
-     * @return bool
+     * @inheritDoc
      */
-    public function inTransaction(): bool
+    public function getPdo(): \PDO
     {
-        return $this->instance->inTransaction();
-    }
-
-    /**
-     * Initiates a transaction.
-     * @return bool
-     */
-    public function begin(): bool
-    {
-        return $this->instance->beginTransaction();
-    }
-
-    /**
-     * Rolls back a transaction.
-     * @return bool
-     */
-    public function rollback(): bool
-    {
-        return $this->instance->rollBack();
-    }
-
-    /**
-     * Commits a transaction.
-     * @return bool
-     */
-    public function commit(): bool
-    {
-        return $this->getPdo()->commit();
-    }
-
-    /**
-     * Get Pdo instance.
-     * @return PDO
-     */
-    public function getPdo(): PDO
-    {
-        return $this->instance;
+        return $this->pdo;
     }
 }

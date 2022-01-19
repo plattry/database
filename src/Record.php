@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Plattry\Database\Collection;
+namespace Plattry\Database;
 
 use ArrayAccess;
 use ArrayIterator;
@@ -10,7 +10,7 @@ use IteratorAggregate;
 
 /**
  * Class Record
- * @package Plattry\Database\Collection
+ * @package Plattry\Database
  */
 class Record implements ArrayAccess, IteratorAggregate
 {
@@ -18,9 +18,19 @@ class Record implements ArrayAccess, IteratorAggregate
      * Record constructor.
      * @param array $record
      */
-    public function __construct(array $record)
+    public function __construct(array $data)
     {
-        foreach ($record as $key => $val) {
+        $this->assignData($data);
+    }
+
+    /**
+     * Assign data to property.
+     * @param array $data
+     * @return void
+     */
+    public function assignData(array $data)
+    {
+        foreach ($data as $key => $val) {
             $this->$key = $val;
         }
     }
@@ -37,12 +47,12 @@ class Record implements ArrayAccess, IteratorAggregate
 
     /**
      * Get a field value.
-     * @param string $key Field name.
-     * @return false|int|string
+     * @param string $key
+     * @return mixed
      */
-    public function get(string $key): false|int|string
+    public function get(string $key): mixed
     {
-        return $this->$key ?? false;
+        return $this->$key ?? null;
     }
 
     /**
