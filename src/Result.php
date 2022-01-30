@@ -9,8 +9,7 @@ use Countable;
 use IteratorAggregate;
 
 /**
- * Class Result
- * @package Plattry\Database
+ * Result of execting sql
  */
 class Result implements Countable, IteratorAggregate
 {

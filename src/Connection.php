@@ -4,17 +4,19 @@ declare(strict_types = 1);
 
 namespace Plattry\Database;
 
+use Plattry\Database\Query\BuilderInterface;
+use Plattry\Database\Query\Pgsql\Builder;
+
 /**
- * Class Connection
- * @package Plattry\Database
+ * Database Connection
  */
 class Connection implements ConnectionInterface
 {
     /**
      * Database dsn
-     * @var string|null
+     * @var string
      */
-    protected string|null $dsn;
+    protected string $dsn;
 
     /**
      * Database username
@@ -41,6 +43,11 @@ class Connection implements ConnectionInterface
     protected \PDO $pdo;
 
     /**
+     * @var string
+     */
+    protected string $queryClass;
+
+    /**
      * @param string $dsn
      * @param string|null $username
      * @param string|null $password
@@ -57,6 +64,11 @@ class Connection implements ConnectionInterface
         $this->password = $password;
         $this->options = $options;
         $this->pdo = new \PDO($dsn, $username, $password, $options);
+
+        $driver = strstr($dsn, ":", true);
+        $this->queryClass = match($driver) {
+            "pgsql" => Builder::class
+        };
     }
 
     /**
@@ -125,5 +137,13 @@ class Connection implements ConnectionInterface
     public function getPdo(): \PDO
     {
         return $this->pdo;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function createQuery(): BuilderInterface
+    {
+        return new $this->queryClass($this);
     }
 }

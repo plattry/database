@@ -4,9 +4,10 @@ declare(strict_types = 1);
 
 namespace Plattry\Database;
 
+use Plattry\Database\Query\BuilderInterface;
+
 /**
- * Interface ConnectionInterface
- * @package Plattry\Database
+ * Database connection
  */
 interface ConnectionInterface
 {
@@ -48,4 +49,9 @@ interface ConnectionInterface
      * @return \PDO
      */
     public function getPdo(): \PDO;
+
+    /**
+     * Create query builder.
+     */
+    public function createQuery(): BuilderInterface;
 }

@@ -9,8 +9,7 @@ use ArrayIterator;
 use IteratorAggregate;
 
 /**
- * Class Record
- * @package Plattry\Database
+ * An record of result records
  */
 class Record implements ArrayAccess, IteratorAggregate
 {
