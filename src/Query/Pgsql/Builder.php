@@ -15,7 +15,7 @@ class Builder extends BaseBuilder
      * The SQL parts supported by each statement type
      */
     protected const PART_INSERT = [
-        "insert", "values", "returning"
+        "insert", "values", "conflict", "do", "set", "where", "returning"
     ];
 
     protected const PART_DELETE = [

@@ -79,11 +79,13 @@ class Connection implements ConnectionInterface
         $statement = $this->pdo->prepare($sql);
 
         foreach ($bindings as $key => $val) {
-            $statement->bindValue(
-                is_numeric($key) ? $key + 1 : $key,
-                $val,
-                is_int($val) ? \PDO::PARAM_INT : \PDO::PARAM_STR
-            );
+            $type = match (get_debug_type($val)) {
+                'null' => \PDO::PARAM_NULL,
+                'bool' => \PDO::PARAM_BOOL,
+                'int', 'float' => \PDO::PARAM_INT,
+                'string' => \PDO::PARAM_STR
+            };
+            $statement->bindValue(is_numeric($key) ? $key + 1 : $key, $val, $type);
         }
 
         $ret = $statement->execute();

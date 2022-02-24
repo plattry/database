@@ -43,6 +43,18 @@ interface BuilderInterface
     public function values(array $values, bool $multi = false): static;
 
     /**
+     * @param string ...$target
+     * @return static
+     */
+    public function conflict(string ...$target): static;
+
+    /**
+     * @param bool $action
+     * @return static
+     */
+    public function do(bool $action = true): static;
+
+    /**
      * @param string ...$using
      * @return static
      */

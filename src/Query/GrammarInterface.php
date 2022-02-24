@@ -40,6 +40,14 @@ interface GrammarInterface
     public const LIKE = "LIKE";
     public const IN = "IN";
 
+    public const CONSTRAINT = "CONSTRAINT";
+
+    /**
+     * @param string $raw
+     * @return RawInterface
+     */
+    public static function raw(string $raw): RawInterface;
+
     /**
      * @param string $insert
      * @return string
@@ -69,6 +77,18 @@ interface GrammarInterface
      * @return array
      */
     public static function values(array $values): array;
+
+    /**
+     * @param array $target
+     * @return string
+     */
+    public static function conflict(array $target): string;
+
+    /**
+     * @param bool $action
+     * @return string
+     */
+    public static function do(bool $action): string;
 
     /**
      * @param array $using

@@ -12,6 +12,14 @@ class Grammar implements GrammarInterface
     /**
      * @inheritDoc
      */
+    public static function raw(string $raw): RawInterface
+    {
+        return new Raw($raw);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public static function insert(string $insert): string
     {
         return "INSERT INTO {$insert}";
@@ -64,6 +72,31 @@ class Grammar implements GrammarInterface
     /**
      * @inheritDoc
      */
+    public static function conflict(array $target): string
+    {
+        if (in_array('', $target, true)) {
+            return "ON CONFLICT";
+        }
+
+        $index = array_search(static::CONSTRAINT, $target);
+        if ($index === false) {
+            return "ON CONFLICT (" . implode(", ", $target) . ")";
+        }
+
+        return "ON CONFLICT ON CONSTRAINT {$target[$index > 0 ? 0 : 1]}";
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function do(bool $action): string
+    {
+        return $action ? "DO UPDATE" : "DO NOTHING";
+    }
+
+    /**
+     * @inheritDoc
+     */
     public static function using(array $using): string
     {
         return "USING " . implode(", ", $using);
@@ -76,9 +109,14 @@ class Grammar implements GrammarInterface
     {
         $statement = $parameter = [];
 
-        foreach($set as $key => $value) {
-            $statement[] = "{$key} = ?";
-            $parameter[] = $value;
+        foreach($set as $item) {
+            [$field, $value] = $item;
+            if ($value instanceof RawInterface) {
+                $statement[] = "{$field} = $value";
+            } else {
+                $statement[] = "{$field} = ?";
+                $parameter[] = $value;
+            }
         }
 
         return ["SET " . implode(", ", $statement), $parameter];
@@ -115,8 +153,10 @@ class Grammar implements GrammarInterface
             
             if (is_array($left)) {
                 $statement[] = "{$type} JOIN {$table} ON " . static::join($left, true);
-            } else {
+            } elseif (!is_null($operator) && !is_null($right)) {
                 $statement[] = "{$type} JOIN {$table} ON {$left} {$operator} {$right}";
+            } else {
+                $statement[] = "{$type} JOIN {$table} ON {$left}";
             }
         }
         

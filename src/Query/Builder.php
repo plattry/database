@@ -32,6 +32,8 @@ class Builder implements BuilderInterface
         "update" => [],
         "select" => [],
         "values" => [],
+        "conflict" => [],
+        "do" => null,
         "using" => [],
         "set" => [],
         "from" => [],
@@ -160,6 +162,29 @@ class Builder implements BuilderInterface
     /**
      * @inheritDoc
      */
+    public function conflict(string ...$target): static
+    {
+        $this->parts["conflict"] = array_merge(
+            $this->parts["conflict"],
+            $target
+        );
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function do(bool $action = true): static
+    {
+        $this->parts["do"] = $action;
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function using(string ...$using): static
     {
         $this->parts["using"] = array_merge(
@@ -177,7 +202,9 @@ class Builder implements BuilderInterface
     {
         $this->parts["set"] = array_merge(
             $this->parts["set"],
-            is_string($field) ? [$field => $value] : $field
+            is_string($field) ?
+                [[$field, $value]] :
+                array_map(fn ($key, $val) => [$key, $val], array_keys($field), array_values($field))
         );
 
         return $this;
